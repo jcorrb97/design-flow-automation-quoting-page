@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Print Quoting Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .panel {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      flex: 1;
+      min-width: 300px;
+    }
+    .panel h3 {
+      margin-top: 0;
+    }
+    select, input[type="number"], input[type="file"] {
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    canvas {
+      width: 100%;
+      height: 300px;
+      background: #eee;
+      border-radius: 8px;
+    }
+    .price {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .infill-style-image img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2></h2>
+  <div class="container">
+    <div class="panel">
+      <h3>Upload Model</h3>
+      <canvas id="previewCanvas"></canvas>
+      <input type="file" id="fileInput" accept=".stl,.obj" />
+      <p id="dimensions"></p>
+    </div>
+    <div class="panel">
+      <h3>Configure Print</h3>
+      <label>Material:</label>
+      <select id="material">
+        <option>ABS</option>
+        <option>ASA</option>
+        <option>PA11 Carbon Fiber</option>
+        <option>PETG</option>
+        <option>PLA</option>
+        <option>TPU (95A)</option>
+      </select>
+
+      <label>Color:</label>
+      <select id="color" disabled></select>
+
+      <label>Infill Style:</label>
+      <select id="infillStyle">
+      	<option value="gyroid">Gyroid</option>
+      	<option value="rectilinear">Rectilinear</option>
+        <option value="aligned rectilinear">Aligned Rectilinear</option>
+        <option value="grid">Grid</option>
+        <option value="triangles">Triangles</option>
+        <option value="stars">Stars</option>
+        <option value="cubic">Cubic</option>
+        <option value="line">Line</option>
+        <option value="concentric">Concentric</option>
+        <option value="honeycomb">Honeycomb</option>
+        <option value="3D honeycomb">3D Honeycomb</option>
+      </select>
+
+      <label>Infill Density:</label>
+      <select id="infill">
+        <option>10%</option>
+        <option>20%</option>
+        <option>50%</option>
+        <option>80%</option>
+        <option>100%</option>
+      </select>
+
+      <label>Quantity:</label>
+      <input type="number" id="quantity" value="1" min="1" />
+
+      <div class="price" id="price">$0.00</div>
+      <button id="checkoutBtn">Proceed to Checkout</button>
+    </div>
+    <div class="panel">
+      <h3>Infill Preview</h3>
+      <div class="infill-style-image">
+        <img id="infillImage" src="https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca34babbff9b78f0594fa_gyroid.jpg" alt="Infill preview" class="imgcolor"/>
+      </div>
+    </div>
+  </div>
+
+
+  <form id="checkout-form" method="POST" action="/create-checkout-session" style="display:none;"></form>
+
+  <script>
+    const canvas = document.getElementById("previewCanvas");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 1000);
+    
+    
+    canvas.width = canvas.clientWidth; 
+		canvas.height = 300; 
+		renderer.setSize(canvas.width, canvas.height); 
+		camera.aspect = canvas.width / canvas.height; 
+		camera.updateProjectionMatrix(); 
+    
+    camera.position.set(0, 0, 100);
+    scene.add(camera);
+    renderer.setSize(canvas.width, canvas.height);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    let currentMesh = null;
+    let currentPrice = 0.00;
+    
+    const infillImageMap = {
+    	rectilinear: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c212a1fb98556e7751_rectilinear.jpg",
+      gyroid: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca34babbff9b78f0594fa_gyroid.jpg",
+      'aligned rectilinear': "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c25cc22580e4c647ef_aligned%20rectilinear.jpg",
+      grid: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c395732b9f85fdfcd4_grid.jpg",
+      triangles: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c24c205128703bade3_triangles.jpg",
+      stars: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c252f156a1846c97e6_stars.jpg",
+      cubic: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca297633e5c6f8c7dd7b6_cubic.jpg",
+      line: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca30a2bc0b16c3da8f975_lines.jpg",
+      concentric: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca31b819885ffe72d7c98_concentric.jpg",
+      honeycomb: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca3303122bec9aad9f801_honeycomb.jpg",
+      '3D honeycomb': "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca33f49f00d36bcf944e8_3D%20honeycomb.jpg"
+    };
+
+    const materialColorMap = {
+      'PA11 Carbon Fiber': ["Black"],
+      PLA: ["Black", "White", "Red", "Blue"],
+      ABS: ["Black", "White"],
+      ASA: ["Black", "White"],
+      'TPU (95A)': ["Natural (White)"],
+      PETG: ["Transparent", "Blue", "Green"]
+    };
+
+    const materialSelect = document.getElementById("material");
+    const colorSelect = document.getElementById("color");
+    const infillSyleSelect = document.getElementById("infillStyle");
+
+    materialSelect.addEventListener("change", () => {
+      const selectedMaterial = materialSelect.value;
+      const colors = materialColorMap[selectedMaterial] || [];
+
+      colorSelect.innerHTML = "";
+      colors.forEach(color => {
+        const option = document.createElement("option");
+        option.value = color;
+        option.textContent = color;
+        colorSelect.appendChild(option);
+      });
+      
+      colorSelect.disabled = colors.length === 0;
+
+      if (currentMesh) {
+        const size = new THREE.Vector3();
+        currentMesh.geometry.boundingBox.getSize(size);
+        calculatePrice(size);
+      }
+    });
+
+    materialSelect.dispatchEvent(new Event("change"));
+
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      if (currentMesh) currentMesh.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    }
+    renderLoop();
+
+    document.getElementById("fileInput").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        let geometry;
+        if (file.name.endsWith(".stl")) {
+          geometry = new THREE.STLLoader().parse(event.target.result);
+        } else if (file.name.endsWith(".obj")) {
+          const obj = new THREE.OBJLoader().parse(event.target.result);
+          geometry = obj.children[0].geometry;
+        } else {
+          alert("Unsupported file format.");
+          return;
+        }
+
+        geometry.computeBoundingBox();
+        geometry.center();
+
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+        mesh.rotation.x = -Math.PI / 2;
+
+        if (currentMesh) scene.remove(currentMesh);
+        currentMesh = mesh;
+        scene.add(mesh);
+
+        const size = new THREE.Vector3();
+        geometry.boundingBox.getSize(size);
+        document.getElementById("dimensions").innerText = `Size: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)} mm`;
+
+        camera.position.set(0, 0, Math.max(size.x, size.y, size.z) * 2);
+        camera.lookAt(0, 0, 0);
+
+        calculatePrice(size);
+      };
+
+      if (file.name.endsWith(".obj")) reader.readAsText(file);
+      else reader.readAsArrayBuffer(file);
+    });
+
+    function calculatePrice(size) {
+      const volume = size.x * size.y * size.z / 1000;
+      const infillRaw = document.getElementById("infill").value;
+      const infill = parseInt(infillRaw.replace("%", ""));
+      const quantity = parseInt(document.getElementById("quantity").value);
+      const price = (volume * 0.05 * (infill / 100)) * quantity;
+      currentPrice = price;
+      document.getElementById("price").innerText = `$${price.toFixed(2)}`;
+    }
+
+    document.querySelectorAll("#material, #color, #infill, #quantity").forEach(el =>
+      el.addEventListener("change", () => {
+        if (currentMesh) {
+          const size = new THREE.Vector3();
+          currentMesh.geometry.boundingBox.getSize(size);
+          calculatePrice(size);
+        }
+      })
+    );
+    
+    document.getElementById("infillStyle").addEventListener("change", () => {
+      const style = document.getElementById("infillStyle").value;
+      const img = document.getElementById("infillImage");
+      img.src = infillImageMap[style];
+      img.style = `width:${canvas.width}px;` //;filter:hue-rotate(200deg);
+    });
+
+    document.getElementById("checkoutBtn").addEventListener("click", async () => {
+      const stripe = Stripe("pk_test_REPLACE_WITH_YOUR_PUBLIC_KEY");
+
+      const response = await fetch("/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          material: document.getElementById("material").value,
+          color: document.getElementById("color").value,
+          infill: document.getElementById("infill").value,
+          quantity: parseInt(document.getElementById("quantity").value),
+          total: currentPrice.toFixed(2),
+        }),
+      });
+
+      const session = await response.json();
+      const result = await stripe.redirectToCheckout({ sessionId: session.id });
+
+      if (result.error) {
+        alert(result.error.message);
+      }
+    });
+  </script>
+</body>
+</html>
