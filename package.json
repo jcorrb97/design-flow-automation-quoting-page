@@ -12,6 +12,7 @@
   "dependencies": {
     "@babel/core": "^7.16.12",
     "@babel/preset-env": "^7.16.11",
+    "@stripe/stripe-js": "^7.5.0",
     "babel-loader": "^8.2.3",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^10.2.4",
@@ -23,6 +24,7 @@
     "ip": "^1.1.5",
     "lil-gui": "^0.16.0",
     "mini-css-extract-plugin": "^2.5.3",
+    "occt-import-js": "^0.0.23",
     "portfinder-sync": "0.0.2",
     "raw-loader": "^4.0.2",
     "style-loader": "^3.3.1",
@@ -35,7 +37,6 @@
   "name": "designflow_qoutingpage",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "author": "",
   "description": ""
 }
