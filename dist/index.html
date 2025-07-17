@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>3D Print Quoting Tool</title>
+<<<<<<< HEAD
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/loaders/OBJLoader.js"></script>
@@ -10,6 +11,12 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/utils/BufferGeometryUtils.js"></script>
   <script>window.occtWasmUrl="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.wasm"</script>
   <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.min.js"></script>
+=======
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
   <script src="https://js.stripe.com/v3/"></script>
   <style>
     body {
@@ -108,7 +115,11 @@
         <option>ASA</option>
         <option>Nylon PA11 + Carbon Fiber</option>
         <option>Nylon PA12</option>
+<<<<<<< HEAD
         <option>Nylon PA12 - Glass Filled</option>
+=======
+        <option>Nylon PA12 + Glass</option>
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
         <option>PETG</option>
         <option>PLA</option>
         <option>TPU (95A)</option>
@@ -156,6 +167,7 @@
   <form id="checkout-form" method="POST" action="/create-checkout-session" style="display:none;"></form>
 
   <script>
+<<<<<<< HEAD
   const canvas = document.getElementById("previewCanvas");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
@@ -195,6 +207,57 @@
     "Natural (Off-White)": "#EDE9DC"
   };
 
+=======
+    const canvas = document.getElementById("previewCanvas");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 1000);
+    
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+
+    canvas.width = canvas.clientWidth; 
+		canvas.height = 300; 
+		renderer.setSize(canvas.width, canvas.height); 
+		camera.aspect = canvas.width / canvas.height; 
+		camera.updateProjectionMatrix(); 
+    
+    camera.position.set(0, 0, 100);
+    scene.add(camera);
+    renderer.setSize(canvas.width, canvas.height);
+    renderer.setClearColor(0xeeeeee); // sets background to light gray
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    let currentMesh = null;
+    let currentPrice = 0.00;
+
+    const colorHexMap = {
+      Black: "#1a1a1a", //Jet Black @Prusament
+      White: "#f2f2f2", //Pearl White @Prusament
+      Red: "#c5162b", //Lipstick Red @Prusament
+      Blue: "#2c60aa", //Azure Blue @Prusament
+      Orange: "#ff6c00", //Prusament Orange
+      Yellow: "#f7d000", //Mango Yellow @Prusament
+      'Natural (Off-White)': "#EDE9DC" //PA12 SLS
+    };
+
+    // const materialDensityMap = {
+    //   PLA: 1.24,
+    //   ABS: 1.04,
+    //   ASA: 1.07,
+    //   PETG: 1.27,
+    //   'TPU (95A)': 1.20,
+    //   'PA11 Carbon Fiber': 1.15,
+    // };
+    
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
     const infillImageMap = {
     	Rectilinear: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c212a1fb98556e7751_rectilinear.jpg",
       Gyroid: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca34babbff9b78f0594fa_gyroid.jpg",
@@ -213,7 +276,11 @@
     const materialColorMap = {
       'Nylon PA11 + Carbon Fiber': ["Black"],
       'Nylon PA12': ["Natural (Off-White)"],
+<<<<<<< HEAD
       'Nylon PA12 - Glass Filled': ["Natural (Off-White)"],
+=======
+      'Nylon PA12 + Glass': ["Natural (Off-White)"],
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
       PLA: ["Black", "White", "Red", "Blue", "Orange", "Yellow"],
       ABS: ["Black", "White", "Red", "Blue", "Orange", "Yellow"],
       ASA: ["Black", "White", "Red", "Blue", "Orange", "Yellow"],
@@ -232,6 +299,7 @@
       PETG: ["Solid", "Gyroid", "Rectilinear", "Aligned Rectilinear", "Grid", "Triangles", "Stars", "Cubic", "Line", "Concentric", "Honeycomb", "3D Honeycomb"]
     };
 
+<<<<<<< HEAD
     const infillStyleDensityMap = {
       Solid: ["100%"],
       Gyroid: ["80%", "50%", "20%", "10%"],
@@ -246,12 +314,38 @@
       Honeycomb: ["80%", "50%", "20%", "10%"],
       '3D Honeycomb': ["80%", "50%", "20%", "10%"],
     };
+=======
+    colorSelect.addEventListener("change", () => {
+      if (currentMesh) {
+        const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+        currentMesh.material.color.set(selectedColor);
+      }
+    });
+
+    function calculateMeshVolume(geometry) {
+      const pos = geometry.attributes.position;
+      let volume = 0;
+      const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i += 3) {
+        vA.fromBufferAttribute(pos, i);
+        vB.fromBufferAttribute(pos, i + 1);
+        vC.fromBufferAttribute(pos, i + 2);
+        volume += vA.dot(vB.cross(vC)) / 6;
+      }
+      return Math.abs(volume / 1000);
+    }
+
+    materialSelect.addEventListener("change", () => {
+      const selectedMaterial = materialSelect.value;
+      const colors = materialColorMap[selectedMaterial] || [];
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
 
   const materialSelect = document.getElementById("material");
   const colorSelect = document.getElementById("color");
   const infillStyleSelect = document.getElementById("infillStyle");
   const infillDensitySelect = document.getElementById("infill");
 
+<<<<<<< HEAD
   colorSelect.addEventListener("change", () => {
     if (currentMesh) {
       const selectedColor = colorHexMap[colorSelect.value] || "#999999";
@@ -286,8 +380,17 @@
 
   return Math.abs(volume / 1000); // cm³
 }
+=======
+      if (currentMesh) {
+        const size = new THREE.Vector3();
+        currentMesh.geometry.boundingBox.getSize(size);
+        calculatePrice(volume);
+      }
+    });
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
 
 
+<<<<<<< HEAD
   materialSelect.addEventListener("change", () => {
     const selectedMaterial = materialSelect.value;
 
@@ -295,8 +398,16 @@
       document.getElementById("process").value = "SLS";
     } else {
       document.getElementById("process").value = "FDM";
+=======
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      controls.update();
+      //if (currentMesh) currentMesh.rotation.y += 0.01;
+      renderer.render(scene, camera);
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
     }
 
+<<<<<<< HEAD
     const colors = materialColorMap[selectedMaterial] || [];
     const infillStyles = materialInfillStyleMap[selectedMaterial] || [];
 
@@ -307,9 +418,18 @@
       colorOption.textContent = color;
       colorSelect.appendChild(colorOption);
     });
+=======
+        geometry.computeBoundingBox();
+        geometry.center();
+        
+        const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: selectedColor }));
+        mesh.rotation.x = -Math.PI / 2;
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
 
     colorSelect.disabled = colors.length === 0;
 
+<<<<<<< HEAD
     infillStyleSelect.innerHTML = "";
     infillStyles.forEach(infillStyle => {
       const infillStyleOption = document.createElement("option");
@@ -322,6 +442,21 @@
 
     const selectedStyle = infillStyleSelect.value;
     const infillDensities = infillStyleDensityMap[selectedStyle] || [];
+=======
+        const size = new THREE.Vector3();
+        geometry.boundingBox.getSize(size);
+        
+        camera.position.set(0, 0, Math.max(size.x, size.y, size.z) * 2);
+        camera.lookAt(0, 0, 0);
+        const volume = calculateMeshVolume(geometry);
+        
+        document.getElementById("dimensions").innerText =
+          `Size: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)} mm\n\n` +
+          `Volume: ${volume.toFixed(2)} cm³\n`;
+
+        calculatePrice(volume);
+      };
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
 
     infillDensitySelect.innerHTML = "";
     infillDensities.forEach(infillDensity => {
@@ -331,11 +466,28 @@
       infillDensitySelect.appendChild(infillDensityOption);
     });
 
+<<<<<<< HEAD
     infillDensitySelect.disabled = infillDensities.length === 0;
 
     if (currentMesh) {
       const volume = calculateMeshVolume(currentMesh.geometry);
       calculatePrice(volume);
+=======
+    function calculatePrice(volume) {
+      //const volume = size.x * size.y * size.z / 1000;
+      const infillRaw = document.getElementById("infill").value;
+      const infill = parseInt(infillRaw.replace("%", ""));
+      const quantity = parseInt(document.getElementById("quantity").value);
+      let cost = volume * 0.05 
+      if (infill == 100) { cost = cost * 1.1;
+      } else { 
+        cost = cost * Math.min(.4 + (infill / 100), 1)
+      }
+      const unitPrice = cost / .3
+      const price = unitPrice * quantity;
+      currentPrice = price;
+      document.getElementById("price").innerText = `$${price.toFixed(2)}`;
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
     }
   });
 
@@ -398,8 +550,20 @@
             indices.push(indexArr[i] + vertexOffset);
           }
 
+<<<<<<< HEAD
           // Update offset: number of vertices = positions.length / 3
           vertexOffset += posArr.length / 3;
+=======
+    document.querySelectorAll("#material, #color, #infill, #quantity").forEach(el =>
+      el.addEventListener("change", () => {
+        if (currentMesh) {
+          // const size = new THREE.Vector3();
+          // currentMesh.geometry.boundingBox.getSize(size);
+          const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+          currentMesh.material.color.set(selectedColor);
+          const volume = calculateMeshVolume(currentMesh.geometry);
+          calculatePrice(volume);
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
         }
 
         if (positions.length === 0 || indices.length === 0) {

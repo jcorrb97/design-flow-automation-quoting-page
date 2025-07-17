@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>3D Print Quoting Tool</title>
+<<<<<<< HEAD
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/loaders/OBJLoader.js"></script>
@@ -10,6 +11,12 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/utils/BufferGeometryUtils.js"></script>
   <script>window.occtWasmUrl="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.wasm"</script>
   <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.min.js"></script>
+=======
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
   <script src="https://js.stripe.com/v3/"></script>
   <style>
     body {
@@ -166,6 +173,7 @@
   <form id="checkout-form" method="POST" action="/create-checkout-session" style="display:none;"></form>
 
   <script>
+<<<<<<< HEAD
   const canvas = document.getElementById("previewCanvas");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
@@ -205,6 +213,57 @@
     "Natural (Off-White)": "#EDE9DC"
   };
 
+=======
+    const canvas = document.getElementById("previewCanvas");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 1000);
+    
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+
+    canvas.width = canvas.clientWidth; 
+		canvas.height = 300; 
+		renderer.setSize(canvas.width, canvas.height); 
+		camera.aspect = canvas.width / canvas.height; 
+		camera.updateProjectionMatrix(); 
+    
+    camera.position.set(0, 0, 100);
+    scene.add(camera);
+    renderer.setSize(canvas.width, canvas.height);
+    renderer.setClearColor(0xeeeeee); // sets background to light gray
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 1, 1);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    let currentMesh = null;
+    let currentPrice = 0.00;
+
+    const colorHexMap = {
+      Black: "#1a1a1a", //Jet Black @Prusament
+      White: "#f2f2f2", //Pearl White @Prusament
+      Red: "#c5162b", //Lipstick Red @Prusament
+      Blue: "#2c60aa", //Azure Blue @Prusament
+      Orange: "#ff6c00", //Prusament Orange
+      Yellow: "#f7d000", //Mango Yellow @Prusament
+      'Natural (Off-White)': "#EDE9DC" //PA12 SLS
+    };
+
+    // const materialDensityMap = {
+    //   PLA: 1.24,
+    //   ABS: 1.04,
+    //   ASA: 1.07,
+    //   PETG: 1.27,
+    //   'TPU (95A)': 1.20,
+    //   'PA11 Carbon Fiber': 1.15,
+    // };
+    
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
     const infillImageMap = {
     	rectilinear: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684c48c212a1fb98556e7751_rectilinear.jpg",
       gyroid: "https://cdn.prod.website-files.com/681ccec839a205f5638f7e48/684ca34babbff9b78f0594fa_gyroid.jpg",
@@ -230,6 +289,7 @@
       PETG:["Black", "White", "Red", "Blue", "Orange", "Yellow"]
     };
 
+<<<<<<< HEAD
   const materialSelect = document.getElementById("material");
   const colorSelect = document.getElementById("color");
   const infillSyleSelect = document.getElementById("infillStyle");
@@ -273,6 +333,104 @@
   materialSelect.addEventListener("change", () => {
     const selectedMaterial = materialSelect.value;
     const colors = materialColorMap[selectedMaterial] || [];
+=======
+    const materialSelect = document.getElementById("material");
+    const colorSelect = document.getElementById("color");
+    const infillSyleSelect = document.getElementById("infillStyle");
+
+    colorSelect.addEventListener("change", () => {
+      if (currentMesh) {
+        const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+        currentMesh.material.color.set(selectedColor);
+      }
+    });
+
+    function calculateMeshVolume(geometry) {
+      const pos = geometry.attributes.position;
+      let volume = 0;
+      const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i += 3) {
+        vA.fromBufferAttribute(pos, i);
+        vB.fromBufferAttribute(pos, i + 1);
+        vC.fromBufferAttribute(pos, i + 2);
+        volume += vA.dot(vB.cross(vC)) / 6;
+      }
+      return Math.abs(volume / 1000);
+    }
+
+    materialSelect.addEventListener("change", () => {
+      const selectedMaterial = materialSelect.value;
+      const colors = materialColorMap[selectedMaterial] || [];
+
+      colorSelect.innerHTML = "";
+      colors.forEach(color => {
+        const option = document.createElement("option");
+        option.value = color;
+        option.textContent = color;
+        colorSelect.appendChild(option);
+      });
+      
+      colorSelect.disabled = colors.length === 0;
+
+      if (currentMesh) {
+        const size = new THREE.Vector3();
+        currentMesh.geometry.boundingBox.getSize(size);
+        calculatePrice(volume);
+      }
+    });
+
+    materialSelect.dispatchEvent(new Event("change"));
+
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      controls.update();
+      //if (currentMesh) currentMesh.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    }
+    renderLoop();
+
+    document.getElementById("fileInput").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        let geometry;
+        if (file.name.endsWith(".stl")) {
+          geometry = new THREE.STLLoader().parse(event.target.result);
+        } else if (file.name.endsWith(".obj")) {
+          const obj = new THREE.OBJLoader().parse(event.target.result);
+          geometry = obj.children[0].geometry;
+        } else {
+          alert("Unsupported file format.");
+          return;
+        }
+
+        geometry.computeBoundingBox();
+        geometry.center();
+        
+        const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: selectedColor }));
+        mesh.rotation.x = -Math.PI / 2;
+
+        if (currentMesh) scene.remove(currentMesh);
+        currentMesh = mesh;
+        scene.add(mesh);
+
+        const size = new THREE.Vector3();
+        geometry.boundingBox.getSize(size);
+        
+        camera.position.set(0, 0, Math.max(size.x, size.y, size.z) * 2);
+        camera.lookAt(0, 0, 0);
+        const volume = calculateMeshVolume(geometry);
+        
+        document.getElementById("dimensions").innerText =
+          `Size: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)} mm\n\n` +
+          `Volume: ${volume.toFixed(2)} cm³\n`;
+
+        calculatePrice(volume);
+      };
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
 
     colorSelect.innerHTML = "";
     colors.forEach(color => {
@@ -282,6 +440,7 @@
       colorSelect.appendChild(option);
     });
 
+<<<<<<< HEAD
     colorSelect.disabled = colors.length === 0;
 
     if (currentMesh) {
@@ -367,6 +526,36 @@
         return;
       }
     };
+=======
+    function calculatePrice(volume) {
+      //const volume = size.x * size.y * size.z / 1000;
+      const infillRaw = document.getElementById("infill").value;
+      const infill = parseInt(infillRaw.replace("%", ""));
+      const quantity = parseInt(document.getElementById("quantity").value);
+      let cost = volume * 0.05 
+      if (infill == 100) { cost = cost * 1.1;
+      } else { 
+        cost = cost * Math.min(.4 + (infill / 100), 1)
+      }
+      const unitPrice = cost / .3
+      const price = unitPrice * quantity;
+      currentPrice = price;
+      document.getElementById("price").innerText = `$${price.toFixed(2)}`;
+    }
+
+    document.querySelectorAll("#material, #color, #infill, #quantity").forEach(el =>
+      el.addEventListener("change", () => {
+        if (currentMesh) {
+          // const size = new THREE.Vector3();
+          // currentMesh.geometry.boundingBox.getSize(size);
+          const selectedColor = colorHexMap[colorSelect.value] || "#999999";
+          currentMesh.material.color.set(selectedColor);
+          const volume = calculateMeshVolume(currentMesh.geometry);
+          calculatePrice(volume);
+        }
+      })
+    );
+>>>>>>> 800e0ec95678d3bb5ca5c08fbf79f0d5e4425f77
     
     if (file.name.endsWith(".obj")) reader.readAsText(file);
     else reader.readAsArrayBuffer(file);
